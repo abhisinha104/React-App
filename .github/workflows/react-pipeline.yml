@@ -13,6 +13,12 @@ jobs:
     - name: Checkout the repository
       uses: actions/checkout@v4
 
+    - name: Set up SSH agent
+      uses: webfactory/ssh-agent@v0.9.0
+      with:
+        ssh-private-key: |
+          ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+
     - name: Copy React app to EC2
       run: |
         # Create a directory for the app on EC2
