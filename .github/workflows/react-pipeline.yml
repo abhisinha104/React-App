@@ -1,4 +1,4 @@
-name: Deploy React App to EC2 with NGINX
+name: Deploy React App to EC2 and Run React Development Server
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - main  # Trigger deployment on push to main branch
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -23,9 +23,19 @@ jobs:
         node --version
         npm --version
 
-        # Use --legacy-peer-deps to bypass dependency conflict
+        # Install project dependencies
         npm install --legacy-peer-deps
-        npm run build
+
+        # Build React app (Optional for production)
+        npm run build  # This generates the production build
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout the repository
+      uses: actions/checkout@v4
 
     - name: Set up SSH agent
       uses: webfactory/ssh-agent@v0.9.0
@@ -33,19 +43,19 @@ jobs:
         ssh-private-key: |
           ${{ secrets.EC2_SSH_PRIVATE_KEY }}
 
-    - name: Remove old build files on EC2
+    - name: Copy React app to EC2
       run: |
+        # Create a directory for the app on EC2
         ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} << 'EOF'
-          sudo rm -rf /var/www/html/*
+          mkdir -p /home/ubuntu/react-app
         EOF
+        # Copy all the code to EC2
+        scp -o StrictHostKeyChecking=no -r ./ ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/ubuntu/react-app/
 
-    - name: Upload build files to EC2
-      run: |
-        scp -o StrictHostKeyChecking=no -r ./build/* ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/var/www/html/
-
-    - name: Restart NGINX
+    - name: Start React app on EC2
       run: |
         ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} << 'EOF'
-          sudo systemctl restart nginx
-          echo "Deployment completed successfully!"
+          cd /home/ubuntu/react-app
+          nohup npm start > /dev/null 2>&1 &  # Run react app in the background
+          echo "React app is running on EC2"
         EOF
