@@ -6,28 +6,29 @@ on:
       - main  # Trigger deployment on push to main branch
 
 jobs:
-  # build:
-  #   runs-on: ubuntu-latest
+  build:
+    runs-on: ubuntu-latest
 
-  #   steps:
-  #   - name: Checkout the repository
-  #     uses: actions/checkout@v4
+    steps:
+    - name: Checkout the repository
+      uses: actions/checkout@v4
 
-  #   - name: Install dependencies and build
-  #     run: |
-  #       # Install Node.js and npm
-  #       sudo apt update
-  #       sudo apt install -y nodejs npm
+    - name: Install Dependency 
+      run: |
+        ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} << 'EOF'
+          cd /home/ubuntu/react-app
+          npm install --legacy-peer-deps
+          echo "Dependency installed"
+        EOF
+        
+    - name: Build React app on EC2
+      run: |
+        ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} << 'EOF'
+          cd /home/ubuntu/react-app
+          npm run build
+          echo "React Build completed on EC2"
+        EOF
 
-  #       # Check Node and npm versions
-  #       node --version
-  #       npm --version
-
-  #       # Install project dependencies
-  #       npm install --legacy-peer-deps
-
-  #       # Build React app (Optional for production)
-  #       npm run build  # This generates the production build
 
   deploy:
     # needs: build
@@ -51,14 +52,6 @@ jobs:
         EOF
         # Copy all the code to EC2
         scp -o StrictHostKeyChecking=no -r ./ ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/ubuntu/react-app/
-
-    - name: Build React app on EC2
-      run: |
-        ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} << 'EOF'
-          cd /home/ubuntu/react-app
-          npm run build
-          echo "React Build completed on EC2"
-        EOF
 
     - name: Start React app on EC2
       run: |
