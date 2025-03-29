@@ -13,6 +13,15 @@ jobs:
     - name: Checkout the repository
       uses: actions/checkout@v4
 
+    - name: Copy React app to EC2
+      run: |
+        # Create a directory for the app on EC2
+        ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} << 'EOF'
+          mkdir -p /home/ubuntu/react-app
+        EOF
+        # Copy all the code to EC2
+        scp -o StrictHostKeyChecking=no -r ./ ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/ubuntu/react-app/
+
     - name: Install Dependency 
       run: |
         ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} << 'EOF'
@@ -44,14 +53,6 @@ jobs:
         ssh-private-key: |
           ${{ secrets.EC2_SSH_PRIVATE_KEY }}
 
-    - name: Copy React app to EC2
-      run: |
-        # Create a directory for the app on EC2
-        ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} << 'EOF'
-          mkdir -p /home/ubuntu/react-app
-        EOF
-        # Copy all the code to EC2
-        scp -o StrictHostKeyChecking=no -r ./ ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/ubuntu/react-app/
 
     - name: Start React app on EC2
       run: |
