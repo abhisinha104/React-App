@@ -52,11 +52,18 @@ jobs:
         # Copy all the code to EC2
         scp -o StrictHostKeyChecking=no -r ./ ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/ubuntu/react-app/
 
-    - name: Start React app on EC2
+    - name: Build React app on EC2
       run: |
         ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} << 'EOF'
           cd /home/ubuntu/react-app
           npm run build
+          echo "React Build completed on EC2"
+        EOF
+
+    - name: Start React app on EC2
+      run: |
+        ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} << 'EOF'
+          cd /home/ubuntu/react-app
           nohup npm start > /dev/null 2>&1 &  # Run react app in the background
           echo "React app is running on EC2"
         EOF
