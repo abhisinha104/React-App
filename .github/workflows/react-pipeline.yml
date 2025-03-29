@@ -15,6 +15,15 @@ jobs:
 
     - name: Install dependencies and build
       run: |
+        # Install Node.js and npm
+        sudo apt update
+        sudo apt install -y nodejs npm
+
+        # Check Node and npm versions
+        node --version
+        npm --version
+
+        # Install project dependencies and build
         npm install
         npm run build
 
