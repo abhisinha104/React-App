@@ -1,5 +1,5 @@
-name: Deploy React App to EC2 and Run React Development Server 
- 
+name: Deploy React App to EC2 and Run React Development Server
+
 on:
   push:
     branches:
@@ -28,14 +28,14 @@ jobs:
         # Copy all the code to EC2
         scp -o StrictHostKeyChecking=no -r ./ ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/ubuntu/react-app/
 
-    - name: Install Dependency 
+    - name: Install Dependencies
       run: |
         ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} << 'EOF'
           cd /home/ubuntu/react-app
           npm install --legacy-peer-deps
-          echo "Dependency installed"
+          echo "Dependencies installed"
         EOF
-        
+
     - name: Build React app on EC2
       run: |
         ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} << 'EOF'
@@ -44,26 +44,23 @@ jobs:
           echo "React Build completed on EC2"
         EOF
 
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Checkout the repository
-      uses: actions/checkout@v4
-
-    - name: Set up SSH agent
-      uses: webfactory/ssh-agent@v0.9.0
-      with:
-        ssh-private-key: |
-          ${{ secrets.EC2_SSH_PRIVATE_KEY }}
-
-
-    - name: Start React app on EC2
+    - name: Set up NGINX to Proxy to React App (port 3000)
       run: |
         ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} << 'EOF'
-          cd /home/ubuntu/react-app
-          nohup npm start > /dev/null 2>&1 &  # Run react app in the background
-          echo "React app is running on EC2"
+          # Install NGINX if not already installed
+          sudo apt update
+          sudo apt install -y nginx
+
+          # Copy the NGINX configuration file from the repository to the EC2 instance
+          sudo mkdir -p /etc/nginx/sites-available
+          sudo cp /home/ubuntu/react-app/nginx/react-app.conf /etc/nginx/sites-available/react-app
+
+          # Enable the site by creating a symlink
+          sudo ln -s /etc/nginx/sites-available/react-app /etc/nginx/sites-enabled/
+
+          # Test NGINX configuration
+          sudo nginx -t
+
+          # Restart NGINX to apply changes
+          sudo systemctl restart nginx
         EOF
