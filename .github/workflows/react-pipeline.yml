@@ -1,4 +1,4 @@
-name: Deploy React App to EC2 and Run React Development Server 
+name: Deploy React App to EC2 and Run React Development Server
 
 on:
   push:
@@ -12,6 +12,12 @@ jobs:
     steps:
     - name: Checkout the repository
       uses: actions/checkout@v4
+
+    - name: Set up AWS credentials using OIDC
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        role-to-assume: arn:aws:iam::453019402688:role/OIDCRoleForGitHub  # Your OIDC role ARN
+        aws-region: us-east-1  # Replace with your AWS region
 
     - name: Get EC2 public IP address (from GitHub Secrets)
       id: ec2_ip
@@ -47,6 +53,12 @@ jobs:
     steps:
     - name: Checkout the repository
       uses: actions/checkout@v4
+
+    - name: Set up AWS credentials using OIDC
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        role-to-assume: arn:aws:iam::453019402688:role/OIDCRoleForGitHub  # Your OIDC role ARN
+        aws-region: us-east-1  # Replace with your AWS region
 
     - name: Get EC2 public IP address (from GitHub Secrets)
       id: ec2_ip
