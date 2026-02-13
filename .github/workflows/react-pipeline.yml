@@ -1,5 +1,5 @@
 name: Deploy React App to EC2 and Run React Development Server
-
+ 
 on:
   push:
     branches:
