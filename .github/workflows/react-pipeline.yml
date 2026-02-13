@@ -27,7 +27,6 @@ jobs:
 
     - name: Copy React app to EC2
       run: |
-        # Use SCP to copy the code directly to EC2 using stored EC2 IP and username secrets
         scp -o StrictHostKeyChecking=no -r ./ ${{ secrets.EC2_USERNAME }}@${{ steps.ec2_ip.outputs.ec2_ip }}:/home/ubuntu/react-app/
 
     - name: Install Dependencies on EC2
